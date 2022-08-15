@@ -1,0 +1,130 @@
+name: Unity Game Build Workflow 🎮
+
+env:
+  UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+  UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+  UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      build-parameters:
+        description: 'Custom parameter to use when build. -EnableHeadlessMode -Development more at https://docs.unity3d.com/ScriptReference/BuildOptions.html'
+        default: ''
+        required: false
+      itch-account:
+        description: 'Itch account name that the project will be deploy to, please update BUTLER_API_KEY if changes.'
+        default: 'trungnhm1998'
+        required: false
+      itch-game:
+        description: 'itch project name will be deploy to.'
+        default: 'test'
+        required: false
+
+jobs:
+  build:
+    name: Build Unity WebGL
+    runs-on: windows-2019
+    steps:
+      - name: Build Started Notification
+        uses: Co-qn/google-chat-notification@releases/v1
+        with:
+          name: Build Started
+          url: ${{ secrets.WEBHOOK }}
+          status: ${{ job.status }}
+        if: always()
+
+      # Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          lfs: true
+          submodules: 'recursive'
+
+      # Cache
+      - name: Cache Library
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
+
+      - run: dir
+      # Build
+      - name: Build project
+        uses: game-ci/unity-builder@v2
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
+        with:
+          customImage: 'trungnhm1998/unityci-editor:2020.3.31f1-webgl'
+          unityVersion: 2020.3.31f1
+          targetPlatform: WebGL
+          customParameters: ${{ github.event.inputs.build-parameters }}
+          buildsPath: build
+
+      - name: Zip artifact on windows
+        if: ${{ runner.os == 'Windows' }}
+        run: |
+          dir build/WebGL/WebGL
+          powershell Compress-Archive ./build/WebGL/WebGL/* ${{ github.workspace }}/build/webgl.zip
+          powershell Compress-Archive ${{ github.workspace }}\build\WebGL\WebGL\* ${{ github.workspace }}\build\webgl.zip
+          powershell Compress-Archive ${{ github.workspace }}\build\WebGL\* ${{ github.workspace }}\build\webgl.zip
+
+      - run: dir
+        
+      # Output
+      - uses: actions/upload-artifact@v3
+        name: Upload zip artifact build/WebGL/*
+        with:
+          name: Build-WebGL
+          path: ${{ github.workspace }}/build/WebGL/WebGL/*
+
+      - name: Build Status Notification
+        uses: Co-qn/google-chat-notification@releases/v1
+        with:
+          name: Build
+          url: ${{ secrets.WEBHOOK }}
+          status: ${{ job.status }}
+        if: always()
+
+  deployItch:
+    name: Deploy to Itch.io
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Download a Build Artifact
+        uses: actions/download-artifact@v3
+        with:
+          # Artifact name
+          name: Build-WebGL
+          # Destination path
+          path: build/webgl.zip
+      - name: Deploy to itch.io
+        uses: trungnhm1998/butler-publish-itchio-action@master
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_API_KEY }}
+          CHANNEL: html5
+          ITCH_GAME: ${{ github.event.inputs.itch-game }}
+          ITCH_USER: ${{ github.event.inputs.itch-account }}
+          PACKAGE: build/webgl.zip
+      - name: Google Chat Notification
+        uses: Co-qn/google-chat-notification@releases/v1
+        with:
+          name: Deploy to https://${{ github.event.inputs.itch-account }}.itch.io/${{ github.event.inputs.itch-game }}
+          url: ${{ secrets.WEBHOOK }}
+          status: ${{ job.status }}
+        if: always()
