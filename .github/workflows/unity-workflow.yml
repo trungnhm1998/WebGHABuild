@@ -75,14 +75,6 @@ jobs:
           customParameters: ${{ github.event.inputs.build-parameters }}
           buildsPath: build
 
-      # Checkout
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-          lfs: true
-          submodules: "recursive"
-
       - name: Zip artifact on windows
         if: ${{ runner.os == 'Windows' }}
         run: |
