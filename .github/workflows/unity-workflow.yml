@@ -54,12 +54,11 @@ jobs:
 
       # Cache
       - name: Cache Library
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
-          path: Library
+          path: ${{ github.workspace }}/Library
           key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
-          restore-keys: |
-            Library-
+          restore-keys: Library-
 
       - run: dir
       # Build
