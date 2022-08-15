@@ -44,14 +44,6 @@ jobs:
           status: ${{ job.status }}
         if: always()
 
-      # Checkout
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
-          lfs: true
-          submodules: 'recursive'
-
       # Cache
       - name: Cache Library
         uses: actions/cache@v2
@@ -76,22 +68,41 @@ jobs:
           customParameters: ${{ github.event.inputs.build-parameters }}
           buildsPath: build
 
+      # Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          lfs: true
+          submodules: 'recursive'
+
       - name: Zip artifact on windows
         if: ${{ runner.os == 'Windows' }}
         run: |
           dir build/WebGL/WebGL
-          powershell Compress-Archive ./build/WebGL/WebGL/* ${{ github.workspace }}/build/webgl.zip
-          powershell Compress-Archive ${{ github.workspace }}\build\WebGL\WebGL\* ${{ github.workspace }}\build\webgl.zip
-          powershell Compress-Archive ${{ github.workspace }}\build\WebGL\* ${{ github.workspace }}\build\webgl.zip
+          powershell Compress-Archive ${{ github.workspace }}/build/WebGL/WebGL/* ${{ github.workspace }}/build/webgl.zip -Force
+          powershell Compress-Archive build/WebGL/WebGL/* build/webgl.zip -Force
 
-      - run: dir
+      - run: dir build
         
       # Output
       - uses: actions/upload-artifact@v3
-        name: Upload zip artifact build/WebGL/*
+        name: Upload zip artifact
         with:
           name: Build-WebGL
           path: ${{ github.workspace }}/build/WebGL/WebGL/*
+
+      - uses: actions/upload-artifact@v3
+        name: Upload zip artifact ${{ github.workspace }}/build/WebGL/*
+        with:
+          name: Build-WebGL
+          path: ${{ github.workspace }}/build/webgl.zip
+
+      - uses: actions/upload-artifact@v3
+        name: Upload zip artifact ${{ github.workspace }}/build/WebGL/*
+        with:
+          name: Build-WebGL
+          path: build/webgl.zip
 
       - name: Build Status Notification
         uses: Co-qn/google-chat-notification@releases/v1
