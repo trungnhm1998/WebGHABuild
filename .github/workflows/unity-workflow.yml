@@ -91,17 +91,6 @@ jobs:
           name: Build-WebGL
           path: ${{ github.workspace }}/build/WebGL/WebGL/*
 
-      - uses: actions/upload-artifact@v3
-        name: Upload zip artifact ${{ github.workspace }}/build/WebGL/*
-        with:
-          name: Build-WebGL
-          path: ${{ github.workspace }}/build/webgl.zip
-
-      - uses: actions/upload-artifact@v3
-        name: Upload zip artifact ${{ github.workspace }}/build/WebGL/*
-        with:
-          name: Build-WebGL
-          path: build/webgl.zip
 
       - name: Build Status Notification
         uses: Co-qn/google-chat-notification@releases/v1
