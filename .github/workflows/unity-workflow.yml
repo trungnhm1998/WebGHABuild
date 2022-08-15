@@ -19,16 +19,16 @@ on:
   workflow_dispatch:
     inputs:
       build-parameters:
-        description: 'Custom parameter to use when build. -EnableHeadlessMode -Development more at https://docs.unity3d.com/ScriptReference/BuildOptions.html'
-        default: ''
+        description: "Custom parameter to use when build. -EnableHeadlessMode -Development more at https://docs.unity3d.com/ScriptReference/BuildOptions.html"
+        default: ""
         required: false
       itch-account:
-        description: 'Itch account name that the project will be deploy to, please update BUTLER_API_KEY if changes.'
-        default: 'trungnhm1998'
+        description: "Itch account name that the project will be deploy to, please update BUTLER_API_KEY if changes."
+        default: "trungnhm1998"
         required: false
       itch-game:
-        description: 'itch project name will be deploy to.'
-        default: 'test'
+        description: "itch project name will be deploy to."
+        default: "test"
         required: false
 
 jobs:
@@ -44,11 +44,19 @@ jobs:
           status: ${{ job.status }}
         if: always()
 
+      # Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          lfs: true
+          submodules: "recursive"
+
       # Cache
       - name: Cache Library
         uses: actions/cache@v2
         with:
-          path: ${{ github.workspace }}/Library
+          path: Library
           key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
           restore-keys: |
             Library-
@@ -62,7 +70,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
-          customImage: 'trungnhm1998/unityci-editor:2020.3.31f1-webgl'
+          customImage: "trungnhm1998/unityci-editor:2020.3.31f1-webgl"
           unityVersion: 2020.3.31f1
           targetPlatform: WebGL
           customParameters: ${{ github.event.inputs.build-parameters }}
@@ -74,7 +82,7 @@ jobs:
         with:
           fetch-depth: 1
           lfs: true
-          submodules: 'recursive'
+          submodules: "recursive"
 
       - name: Zip artifact on windows
         if: ${{ runner.os == 'Windows' }}
@@ -84,7 +92,7 @@ jobs:
           powershell Compress-Archive build/WebGL/WebGL/* build/webgl.zip -Force
 
       - run: dir build
-        
+
       # Output
       - uses: actions/upload-artifact@v3
         name: Upload zip artifact
