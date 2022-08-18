@@ -34,7 +34,7 @@ on:
 jobs:
   build:
     name: Build Unity WebGL
-    runs-on: windows-2019
+    runs-on: ubuntu-latest
     steps:
       - name: Build Started Notification
         uses: Co-qn/google-chat-notification@releases/v1
@@ -69,7 +69,6 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
           UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
         with:
-          customImage: "trungnhm1998/unityci-editor:2020.3.31f1-webgl"
           unityVersion: 2020.3.31f1
           targetPlatform: WebGL
           customParameters: ${{ github.event.inputs.build-parameters }}
