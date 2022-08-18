@@ -5,10 +5,6 @@ env:
   UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
   UNITY_SERIAL: ${{ secrets.UNITY_SERIAL }}
 
-concurrency:
-  group: ${{ github.ref }}
-  cancel-in-progress: true
-
 on:
   pull_request:
     branches:
