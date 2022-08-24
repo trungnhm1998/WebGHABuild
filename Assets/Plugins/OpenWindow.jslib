@@ -1,5 +1,5 @@
 ﻿var OpenWindowPlugin = {
-    openWindow: function(link)
+    OpenImageWindow: function (link)
     {
         var url = Pointer_stringify(link);
         document.onmouseup = function()
@@ -9,5 +9,5 @@
         }
     }
 };
- 
+
 mergeInto(LibraryManager.library, OpenWindowPlugin);

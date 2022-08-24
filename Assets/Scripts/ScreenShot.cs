@@ -1,9 +1,13 @@
 using System.Collections;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityTemplateProjects;
 
 public class ScreenShot : MonoBehaviour
 {
+    [DllImport("__Internal")]
+    private static extern void OpenImageWindow(string url);
+
     // Use this for initialization
     public void Screenshot()
     {
@@ -26,21 +30,23 @@ public class ScreenShot : MonoBehaviour
 
         // Encode texture into PNG
         byte[] bytes = tex.EncodeToPNG();
-        Destroy(tex);
 
         //string ToBase64String byte[]
         string encodedText = System.Convert.ToBase64String(bytes);
-        Debug.Log(encodedText);
+        Debug.Log("Original: " + encodedText);
+        
+        byte[] scaledBytes = TextureScaler.scaled(tex, width / 3, height / 3, FilterMode.Point).EncodeToPNG();
+        
+        string scaledEncodedText = System.Convert.ToBase64String(scaledBytes);
+        Debug.Log("scaled: " + scaledEncodedText);
 
-        var image_url = "data:image/png;base64," + encodedText;
+        Destroy(tex);
+        var image_url = "data:image/png;base64," + scaledEncodedText;
 
         Debug.Log(image_url);
 
 #if !UNITY_EDITOR
-        openWindow(image_url);
+        OpenImageWindow(image_url);
 #endif
     }
-
-    [DllImport("__Internal")]
-    private static extern void openWindow(string url);
 }
